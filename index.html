@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -590,10 +591,11 @@ footer{background:#111122;padding:64px 48px 36px;color:rgba(255,255,255,0.4)}
   <!-- Pack size selector -->
   <div style="display:flex;justify-content:center;margin:28px 0 0">
     <div class="pack-size-row" id="pack-sz-row">
-      <button class="pack-sz-btn psb-on" data-qty="3" data-discount="0" onclick="selectPackSize(this)">Trio · 3 bottles</button>
-      <button class="pack-sz-btn" data-qty="6" data-discount="5" onclick="selectPackSize(this)">6-Pack · save 5%</button>
-      <button class="pack-sz-btn" data-qty="9" data-discount="10" onclick="selectPackSize(this)">9-Pack · save 10%</button>
-      <button class="pack-sz-btn" data-qty="12" data-discount="15" onclick="selectPackSize(this)">12-Pack · save 15%</button>
+      <button class="pack-sz-btn" data-qty="2" data-discount="5" data-covers="2" onclick="selectPackSize(this)">BFF Pack · 2 bottles + 2 covers · save 5%</button>
+      <button class="pack-sz-btn psb-on" data-qty="3" data-discount="5" data-covers="1" onclick="selectPackSize(this)">Trio · 3 bottles · save 5%</button>
+      <button class="pack-sz-btn" data-qty="6" data-discount="7.5" data-covers="1" onclick="selectPackSize(this)">6-Pack · save 7.5%</button>
+      <button class="pack-sz-btn" data-qty="9" data-discount="10" data-covers="1" onclick="selectPackSize(this)">9-Pack · save 10%</button>
+      <button class="pack-sz-btn" data-qty="12" data-discount="15" data-covers="1" onclick="selectPackSize(this)">12-Pack · save 15%</button>
     </div>
   </div>
   <p class="pack-slots-msg" id="pack-slots-msg" style="margin-top:10px">Pick 3 scents to complete your pack</p>
@@ -631,7 +633,7 @@ footer{background:#111122;padding:64px 48px 36px;color:rgba(255,255,255,0.4)}
           </button>
         </div>
 
-        <p class="pack-col-head" style="margin-top:28px">Add a silicone cover <em style="font-style:normal;font-size:12px;color:var(--muted);font-weight:400">(optional · R149)</em></p>
+        <p class="pack-col-head" style="margin-top:28px"><span id="cover-section-label">Add a silicone cover</span> <em style="font-style:normal;font-size:12px;color:var(--muted);font-weight:400">(optional · R149)</em></p>
         <div class="cover-pick-grid" id="cover-pick-grid">
           <button class="cover-pick-btn" data-cover="none" data-hex="" onclick="selectCover(this)">
             <span class="cpb-none">✕</span>No cover
@@ -761,14 +763,19 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 (function(){
   var packQty = 3;
   var packDiscount = 0;
+  var packMaxCovers = 1;
   var scentCounts = {}; // {scentName: count}
-  var selectedCover = null; // null or {name, hex}
+  var selectedCovers = []; // array of {name, hex}
 
   window.selectPackSize = function(btn){
     document.querySelectorAll('.pack-sz-btn').forEach(b=>b.classList.remove('psb-on'));
     btn.classList.add('psb-on');
     packQty = parseInt(btn.dataset.qty);
     packDiscount = parseInt(btn.dataset.discount);
+    packMaxCovers = parseInt(btn.dataset.covers) || 1;
+    scentCounts = {};
+    selectedCovers = [];
+    document.querySelectorAll('.cover-pick-btn').forEach(b=>b.classList.remove('cpb-sel'));
     updatePackUI();
   };
 
@@ -791,12 +798,28 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
   };
 
   window.selectCover = function(btn){
-    document.querySelectorAll('.cover-pick-btn').forEach(b=>b.classList.remove('cpb-sel'));
-    btn.classList.add('cpb-sel');
-    if(btn.dataset.cover === 'none'){
-      selectedCover = null;
+    var coverName = btn.dataset.cover;
+    if(coverName === 'none'){
+      selectedCovers = [];
+      document.querySelectorAll('.cover-pick-btn').forEach(b=>b.classList.remove('cpb-sel'));
+      btn.classList.add('cpb-sel');
+    } else if(packMaxCovers === 1){
+      // single cover mode
+      document.querySelectorAll('.cover-pick-btn').forEach(b=>b.classList.remove('cpb-sel'));
+      btn.classList.add('cpb-sel');
+      selectedCovers = [{name: coverName, hex: btn.dataset.hex}];
     } else {
-      selectedCover = {name: btn.dataset.cover, hex: btn.dataset.hex};
+      // multi-cover mode (BFF): toggle, max packMaxCovers
+      var noneBtn = document.querySelector('.cover-pick-btn[data-cover="none"]');
+      if(noneBtn) noneBtn.classList.remove('cpb-sel');
+      var alreadyIdx = selectedCovers.findIndex(function(c){return c.name===coverName;});
+      if(alreadyIdx > -1){
+        selectedCovers.splice(alreadyIdx,1);
+        btn.classList.remove('cpb-sel');
+      } else if(selectedCovers.length < packMaxCovers){
+        selectedCovers.push({name: coverName, hex: btn.dataset.hex});
+        btn.classList.add('cpb-sel');
+      }
     }
     updatePackUI();
   };
@@ -817,14 +840,25 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
       }
     });
 
+    // Cover section label
+    var coverLabel = document.getElementById('cover-section-label');
+    if(coverLabel){
+      if(packMaxCovers > 1){
+        coverLabel.textContent = 'Choose ' + packMaxCovers + ' silicone covers (R149 each)';
+      } else {
+        coverLabel.textContent = 'Add a silicone cover';
+      }
+    }
+
     // Slots message
     var msg = document.getElementById('pack-slots-msg');
+    var coversPending = packMaxCovers > 1 && selectedCovers.length < packMaxCovers;
     if(remaining > 0) msg.textContent = 'Pick ' + remaining + ' more scent' + (remaining > 1 ? 's' : '') + ' to complete your pack';
-    else msg.textContent = '✓ Pack complete! ' + (selectedCover ? '' : 'Add a cover or ') + 'hit the button below.';
+    else if(coversPending) msg.textContent = 'Pick ' + (packMaxCovers - selectedCovers.length) + ' more cover' + (packMaxCovers - selectedCovers.length > 1 ? 's' : '') + ' for your BFF Pack!';
+    else msg.textContent = '✓ Pack complete! ' + (selectedCovers.length === 0 ? 'Add a cover or ' : '') + 'hit the button below.';
 
     // Summary list
     var ul = document.getElementById('pack-sum-items');
-    var emptyEl = document.getElementById('pack-sum-empty');
     ul.innerHTML = '';
     var entries = Object.entries(scentCounts);
     if(entries.length === 0){
@@ -835,16 +869,16 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
         li.innerHTML = '<span class="pack-sum-dot" style="background:'+getScentColor(e[0])+'"></span><span>'+e[0]+' × '+e[1]+'</span>';
         ul.appendChild(li);
       });
-      if(selectedCover){
+      selectedCovers.forEach(function(c){
         var li = document.createElement('li');
-        li.innerHTML = '<span class="pack-sum-dot" style="background:'+selectedCover.hex+'"></span><span>'+selectedCover.name+' Cover</span>';
+        li.innerHTML = '<span class="pack-sum-dot" style="background:'+c.hex+'"></span><span>'+c.name+' Cover</span>';
         ul.appendChild(li);
-      }
+      });
     }
 
     // Prices
     var bottleTotal = total * 99;
-    var coverPrice = selectedCover ? 149 : 0;
+    var coverPrice = selectedCovers.length * 149;
     var subtotal = bottleTotal + coverPrice;
     var discountAmt = Math.round(bottleTotal * packDiscount / 100);
     var grandTotal = subtotal - discountAmt;
@@ -852,7 +886,15 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     document.getElementById('sum-qty').textContent = total;
     document.getElementById('sum-bottle-price').textContent = 'R' + bottleTotal;
     var coverRow = document.getElementById('sum-cover-row');
-    coverRow.style.display = selectedCover ? '' : 'none';
+    if(selectedCovers.length > 0){
+      coverRow.style.display = '';
+      var coverLbl = coverRow.querySelector('span:first-child');
+      if(coverLbl) coverLbl.textContent = selectedCovers.length > 1 ? 'Silicone covers (×' + selectedCovers.length + ')' : 'Silicone cover';
+      var coverAmt = coverRow.querySelector('span:last-child');
+      if(coverAmt) coverAmt.textContent = 'R' + coverPrice;
+    } else {
+      coverRow.style.display = 'none';
+    }
     var discRow = document.getElementById('sum-discount-row');
     discRow.style.display = discountAmt > 0 ? '' : 'none';
     document.getElementById('sum-discount-val').textContent = '−R' + discountAmt;
@@ -866,9 +908,10 @@ document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
       savingEl.style.display = 'none';
     }
 
-    // CTA button
+    // CTA button — BFF pack requires both scents AND covers filled
+    var bffComplete = packMaxCovers > 1 ? (remaining === 0 && selectedCovers.length === packMaxCovers) : remaining === 0;
     var cta = document.getElementById('pack-cta-btn');
-    if(remaining === 0){
+    if(bffComplete){
       cta.disabled = false;
       cta.textContent = 'Add Pack to Cart · R' + grandTotal;
     } else {
