@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,7 +87,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .sc-card:hover{transform:translateY(-10px);box-shadow:0 20px 56px rgba(0,0,0,0.13);border-color:transparent}
 .sc-card.featured{grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--orange)}
 .sc-card.featured:hover{box-shadow:0 20px 56px rgba(245,131,10,0.2);border-color:var(--orange)}
-.sc-img{width:100%;aspect-ratio:3/4;object-fit:cover;display:block;transition:transform 0.5s}
+.sc-img{width:100%;aspect-ratio:3/4;object-fit:contain;object-position:center;display:block;transition:transform 0.5s;background:#f7f7f9;padding:12px 0}
 .sc-card.featured .sc-img{aspect-ratio:auto;height:100%;min-height:380px}
 .sc-card:hover .sc-img{transform:scale(1.05)}
 .sc-body{padding:24px 24px 20px;background:white}
@@ -257,9 +258,9 @@ footer{background:#111122;padding:64px 48px 36px;color:rgba(255,255,255,0.4)}
   .hero-btns{justify-content:center;gap:10px}
   .btn-dark,.btn-outline{padding:14px 28px;font-size:15px}
   .hero-right{min-height:auto;padding:16px 8px}
-  .pf-img{width:90px;height:220px;border-radius:14px;object-fit:contain;background:transparent;box-shadow:none}
-  .products-row{gap:10px}
-  .products-grid{gap:10px}
+  .pf-img{width:100px;height:160px;border-radius:14px;object-fit:contain;background:#f5f5f8}
+  .products-row{gap:8px}
+  .products-grid{gap:8px}
 
   /* ── Quirk banner ── */
   .quirk-inner{flex-direction:column}
@@ -274,7 +275,7 @@ footer{background:#111122;padding:64px 48px 36px;color:rgba(255,255,255,0.4)}
   .scents-grid{grid-template-columns:1fr}
   .sc-card.featured{grid-column:span 1;grid-template-columns:1fr}
   .sc-card.featured .sc-img{min-height:220px}
-  .sc-card .sc-img{max-height:200px}
+  .sc-card .sc-img{max-height:260px;padding:16px 0}
   .sc-body{padding:16px}
   .sc-name{font-size:18px}
   .sc-footer{gap:8px;flex-wrap:wrap}
@@ -330,7 +331,7 @@ footer{background:#111122;padding:64px 48px 36px;color:rgba(255,255,255,0.4)}
 
 @media(max-width:420px){
   .hero-h1{font-size:36px}
-  .pf-img{width:72px;height:185px;object-fit:contain}
+  .pf-img{width:82px;height:132px;object-fit:contain}
   .products-row{gap:6px}
   .scent-pick-grid{grid-template-columns:1fr}
   .cover-pick-grid{grid-template-columns:repeat(2,1fr)}
